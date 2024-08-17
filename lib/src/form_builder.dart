@@ -132,8 +132,8 @@ typedef FormBuilderFields = Map<String, FormBuilderFieldState<FormBuilderField<d
 class FormBuilderState<T extends Object> extends State<FormBuilder<T>> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FormBuilderFields _fields = {};
-  final Object _instantValue = {};
-  Object _savedValue = {};
+  late T _instantValue;
+  late T _savedValue;
   // final Map<String, dynamic> _instantValueMap = {};
   // final Map<String, dynamic> _savedValueMap = {};
   // Because dart type system will not accept ValueTransformer<dynamic>
@@ -171,24 +171,17 @@ class FormBuilderState<T extends Object> extends State<FormBuilder<T>> {
   /// Get all fields of form.
   FormBuilderFields get fields => _fields;
 
-  Object get instantValue {
-    if (_instantValue is Map<String, dynamic>) {
-      return Map<String, dynamic>.unmodifiable(
-          (_instantValue).map((key, value) => MapEntry(key, _transformers[key]?.call(value) ?? value)));
-    }
-    return _instantValue;
-  }
+  T get instantValue => _applyTransformers(_instantValue);
 
   /// Returns the saved value only
-  Object get value {
-    if (_savedValue is Map<String, dynamic>) {
-      return Map<String, dynamic>.unmodifiable(
-        (_savedValue as Map<String, dynamic>).map(
-          (key, value) => MapEntry(key, _transformers[key]?.call(value) ?? value),
-        ),
-      );
+  T get value => _applyTransformers(_savedValue);
+
+  T _applyTransformers(T value) {
+    if (value is Map<String, dynamic>) {
+      return Map<String, dynamic>.unmodifiable(value.map((key, dynamic val) => MapEntry(key, _transformers[key]?.call(val) ?? val))) as T;
     }
-    return _savedValue;
+    // For non-Map types, you might need to implement a custom transformation logic
+    return value;
   }
 
   dynamic transformValue<T>(String name, T? v) {
@@ -237,7 +230,7 @@ class FormBuilderState<T extends Object> extends State<FormBuilder<T>> {
     }
 
     field.setValue(
-      (_instantValue)[name],
+      (_instantValue as Map<String, dynamic>)[name],
       populateForm: false,
     );
   }
