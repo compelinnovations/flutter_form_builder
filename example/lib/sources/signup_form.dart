@@ -18,6 +18,7 @@ class _SignupFormState extends State<SignupForm> {
     return SingleChildScrollView(
       child: FormBuilder(
         key: _formKey,
+        initialValue: const {},
         child: Column(
           children: [
             FormBuilderTextField(

@@ -18,6 +18,7 @@ class _DecoratedRadioCheckboxState extends State<DecoratedRadioCheckbox> {
     return SingleChildScrollView(
         child: FormBuilder(
       key: _formKey,
+      initialValue: const {},
       child: Column(
         children: <Widget>[
           const SizedBox(height: 20),

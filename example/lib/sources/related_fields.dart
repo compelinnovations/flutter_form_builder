@@ -26,6 +26,7 @@ class _RelatedFieldsState extends State<RelatedFields> {
   Widget build(BuildContext context) {
     return FormBuilder(
       key: _formKey,
+      initialValue: const {},
       child: Column(
         children: <Widget>[
           const SizedBox(height: 20),
