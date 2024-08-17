@@ -113,7 +113,7 @@ class FormBuilder<T extends Object> extends StatefulWidget {
     this.onPopInvoked,
     this.onPopInvokedWithResult,
     this.useEjson = false,
-    required this.initialValue,
+    this.initialValue,
     this.skipDisabled = false,
     this.enabled = true,
     this.clearValueOnUnregister = false,
