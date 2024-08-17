@@ -64,7 +64,7 @@ class FormBuilder<T extends Object> extends StatefulWidget {
   ///
   /// The initialValues set here will be ignored if the field has a local
   /// initialValue set.
-  final T initialValue;
+  final T? initialValue;
 
   /// Whether the form should ignore submitting values from fields where
   /// `enabled` is `false`.
@@ -132,8 +132,8 @@ typedef FormBuilderFields = Map<String, FormBuilderFieldState<FormBuilderField<d
 class FormBuilderState<T extends Object> extends State<FormBuilder<T>> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FormBuilderFields _fields = {};
-  late T _instantValue;
-  late T _savedValue;
+  T? _instantValue;
+  T? _savedValue;
   // final Map<String, dynamic> _instantValueMap = {};
   // final Map<String, dynamic> _savedValueMap = {};
   // Because dart type system will not accept ValueTransformer<dynamic>
@@ -171,12 +171,12 @@ class FormBuilderState<T extends Object> extends State<FormBuilder<T>> {
   /// Get all fields of form.
   FormBuilderFields get fields => _fields;
 
-  T get instantValue => _applyTransformers(_instantValue);
+  T? get instantValue => _applyTransformers(_instantValue);
 
   /// Returns the saved value only
-  T get value => _applyTransformers(_savedValue);
+  T? get value => _applyTransformers(_savedValue);
 
-  T _applyTransformers(T value) {
+  T? _applyTransformers(T? value) {
     if (value is Map<String, dynamic>) {
       return Map<String, dynamic>.unmodifiable(value.map((key, dynamic val) => MapEntry(key, _transformers[key]?.call(val) ?? val))) as T;
     }
