@@ -5,7 +5,7 @@ final formKey = GlobalKey<FormBuilderState>();
 
 Widget buildTestableFieldWidget(
   Widget widget, {
-  Map<String, dynamic> initialValue = const {},
+  dynamic initialValue = const {},
   bool skipDisabled = false,
   bool clearValueOnUnregister = false,
   AutovalidateMode? autovalidateMode,
@@ -29,5 +29,5 @@ void formFieldDidChange(String fieldName, dynamic value) {
   formKey.currentState!.fields[fieldName]!.didChange(value);
 }
 
-T formValue<T>(String name) => formKey.currentState!.value[name];
-T formInstantValue<T>(String name) => formKey.currentState!.instantValue[name];
+T formValue<T>(String name) => (formKey.currentState!.value as Map<String, dynamic>)[name];
+T formInstantValue<T>(String name) => (formKey.currentState!.instantValue as Map<String, dynamic>)[name];

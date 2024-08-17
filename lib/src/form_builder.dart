@@ -62,7 +62,7 @@ class FormBuilder extends StatefulWidget {
   ///
   /// The initialValues set here will be ignored if the field has a local
   /// initialValue set.
-  final Map<String, dynamic> initialValue;
+  final Object initialValue;
 
   /// Whether the form should ignore submitting values from fields where
   /// `enabled` is `false`.
@@ -110,29 +110,29 @@ class FormBuilder extends StatefulWidget {
     )
     this.onPopInvoked,
     this.onPopInvokedWithResult,
-    this.initialValue = const <String, dynamic>{},
+    this.initialValue = const {} as Object,
     this.skipDisabled = false,
     this.enabled = true,
     this.clearValueOnUnregister = false,
     this.canPop,
   });
 
-  static FormBuilderState? of(BuildContext context) =>
-      context.findAncestorStateOfType<FormBuilderState>();
+  static FormBuilderState? of(BuildContext context) => context.findAncestorStateOfType<FormBuilderState>();
 
   @override
   FormBuilderState createState() => FormBuilderState();
 }
 
 /// A type alias for a map of form fields.
-typedef FormBuilderFields
-    = Map<String, FormBuilderFieldState<FormBuilderField<dynamic>, dynamic>>;
+typedef FormBuilderFields = Map<String, FormBuilderFieldState<FormBuilderField<dynamic>, dynamic>>;
 
 class FormBuilderState extends State<FormBuilder> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FormBuilderFields _fields = {};
-  final Map<String, dynamic> _instantValue = {};
-  final Map<String, dynamic> _savedValue = {};
+  final Object _instantValue = {};
+  Object _savedValue = {};
+  // final Map<String, dynamic> _instantValueMap = {};
+  // final Map<String, dynamic> _savedValueMap = {};
   // Because dart type system will not accept ValueTransformer<dynamic>
   final Map<String, Function> _transformers = {};
   bool _focusOnInvalid = true;
@@ -159,25 +159,34 @@ class FormBuilderState extends State<FormBuilder> {
 
   /// Get a map of errors
   Map<String, String> get errors => {
-        for (var element
-            in fields.entries.where((element) => element.value.hasError))
-          element.key.toString(): element.value.errorText ?? ''
+        for (var element in fields.entries.where((element) => element.value.hasError)) element.key.toString(): element.value.errorText ?? ''
       };
 
   /// Get initialValue.
-  Map<String, dynamic> get initialValue => widget.initialValue;
+  dynamic get initialValue => widget.initialValue;
 
   /// Get all fields of form.
   FormBuilderFields get fields => _fields;
 
-  Map<String, dynamic> get instantValue =>
-      Map<String, dynamic>.unmodifiable(_instantValue.map((key, value) =>
-          MapEntry(key, _transformers[key]?.call(value) ?? value)));
+  Object get instantValue {
+    if (_instantValue is Map<String, dynamic>) {
+      return Map<String, dynamic>.unmodifiable(
+          (_instantValue).map((key, value) => MapEntry(key, _transformers[key]?.call(value) ?? value)));
+    }
+    return _instantValue;
+  }
 
   /// Returns the saved value only
-  Map<String, dynamic> get value =>
-      Map<String, dynamic>.unmodifiable(_savedValue.map((key, value) =>
-          MapEntry(key, _transformers[key]?.call(value) ?? value)));
+  Object get value {
+    if (_savedValue is Map<String, dynamic>) {
+      return Map<String, dynamic>.unmodifiable(
+        (_savedValue as Map<String, dynamic>).map(
+          (key, value) => MapEntry(key, _transformers[key]?.call(value) ?? value),
+        ),
+      );
+    }
+    return _savedValue;
+  }
 
   dynamic transformValue<T>(String name, T? v) {
     final t = _transformers[name];
@@ -189,17 +198,16 @@ class FormBuilderState extends State<FormBuilder> {
   }
 
   T? getRawValue<T>(String name, {bool fromSaved = false}) {
-    return (fromSaved ? _savedValue[name] : _instantValue[name]) ??
-        initialValue[name];
+    return (fromSaved ? (_savedValue as Map<String, dynamic>)[name] : (_instantValue as Map<String, dynamic>)[name]) ?? initialValue[name];
   }
 
   void setInternalFieldValue<T>(String name, T? value) {
-    _instantValue[name] = value;
+    (_instantValue as Map<String, dynamic>)[name] = value;
     widget.onChanged?.call();
   }
 
   void removeInternalFieldValue(String name) {
-    _instantValue.remove(name);
+    (_instantValue as Map<String, dynamic>).remove(name);
   }
 
   void registerField(String name, FormBuilderFieldState field) {
@@ -221,12 +229,12 @@ class FormBuilderState extends State<FormBuilder> {
     _fields[name] = field;
     field.registerTransformer(_transformers);
 
-    if (widget.clearValueOnUnregister || (_instantValue[name] == null)) {
-      _instantValue[name] = field.initialValue ?? initialValue[name];
+    if (widget.clearValueOnUnregister || ((_instantValue as Map<String, dynamic>)[name] == null)) {
+      (_instantValue as Map<String, dynamic>)[name] = field.initialValue ?? initialValue[name];
     }
 
     field.setValue(
-      _instantValue[name],
+      (_instantValue)[name],
       populateForm: false,
     );
   }
@@ -245,8 +253,8 @@ class FormBuilderState extends State<FormBuilder> {
       _fields.remove(name);
       _transformers.remove(name);
       if (widget.clearValueOnUnregister) {
-        _instantValue.remove(name);
-        _savedValue.remove(name);
+        ((_instantValue as Map<String, dynamic>)).remove(name);
+        ((_savedValue as Map<String, dynamic>)).remove(name);
       }
     } else {
       assert(() {
@@ -261,20 +269,14 @@ class FormBuilderState extends State<FormBuilder> {
 
   void save() {
     _formKey.currentState!.save();
-    // Copy values from instant to saved
-    _savedValue.clear();
-    _savedValue.addAll(_instantValue);
+    _savedValue = _instantValue;
   }
 
-  @Deprecated(
-      'Will be remove to avoid redundancy. Use fields[name]?.invalidate(errorText) instead')
-  void invalidateField({required String name, String? errorText}) =>
-      fields[name]?.invalidate(errorText ?? '');
+  @Deprecated('Will be remove to avoid redundancy. Use fields[name]?.invalidate(errorText) instead')
+  void invalidateField({required String name, String? errorText}) => fields[name]?.invalidate(errorText ?? '');
 
-  @Deprecated(
-      'Will be remove to avoid redundancy. Use fields.first.invalidate(errorText) instead')
-  void invalidateFirstField({required String errorText}) =>
-      fields.values.first.invalidate(errorText);
+  @Deprecated('Will be remove to avoid redundancy. Use fields.first.invalidate(errorText) instead')
+  void invalidateFirstField({required String errorText}) => fields.values.first.invalidate(errorText);
 
   /// Validate all fields of form
   ///
@@ -295,8 +297,7 @@ class FormBuilderState extends State<FormBuilder> {
     _focusOnInvalid = focusOnInvalid;
     final hasError = !_formKey.currentState!.validate();
     if (hasError) {
-      final wrongFields =
-          fields.values.where((element) => element.hasError).toList();
+      final wrongFields = fields.values.where((element) => element.hasError).toList();
       if (wrongFields.isNotEmpty) {
         if (focusOnInvalid) {
           wrongFields.first.focus();
@@ -341,10 +342,16 @@ class FormBuilderState extends State<FormBuilder> {
   /// Useful when need update all values at once, after init.
   ///
   /// To load all values at once on init, use `initialValue` property
-  void patchValue(Map<String, dynamic> val) {
-    val.forEach((key, dynamic value) {
-      _fields[key]?.didChange(value);
-    });
+  void patchValue(Object val) {
+    if (val is Map<String, dynamic> && _instantValue is Map<String, dynamic>) {
+      val.forEach((key, dynamic value) {
+        _fields[key]?.didChange(value);
+      });
+    } else {
+      (val as Map<String, dynamic>).forEach((key, dynamic value) {
+        _fields[key]?.didChange(value);
+      });
+    }
   }
 
   @override
@@ -380,6 +387,5 @@ class _FormBuilderScope extends InheritedWidget {
   FormBuilder get form => _formState.widget;
 
   @override
-  bool updateShouldNotify(_FormBuilderScope oldWidget) =>
-      oldWidget._formState != _formState;
+  bool updateShouldNotify(_FormBuilderScope oldWidget) => oldWidget._formState != _formState;
 }
