@@ -2,12 +2,14 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 
 /// A container for form fields.
-class FormBuilder extends StatefulWidget {
+class FormBuilder<T extends Object> extends StatefulWidget {
   /// Called when one of the form fields changes.
   ///
   /// In addition to this callback being invoked, all the form fields themselves
   /// will rebuild.
   final VoidCallback? onChanged;
+
+  final bool? useEjson;
 
   /// DEPRECATED: Use [onPopInvokedWithResult] instead.
   final void Function(bool)? onPopInvoked;
@@ -62,7 +64,7 @@ class FormBuilder extends StatefulWidget {
   ///
   /// The initialValues set here will be ignored if the field has a local
   /// initialValue set.
-  final Object initialValue;
+  final T initialValue;
 
   /// Whether the form should ignore submitting values from fields where
   /// `enabled` is `false`.
@@ -110,23 +112,24 @@ class FormBuilder extends StatefulWidget {
     )
     this.onPopInvoked,
     this.onPopInvokedWithResult,
-    this.initialValue = const {} as Object,
+    this.useEjson = false,
+    required this.initialValue,
     this.skipDisabled = false,
     this.enabled = true,
     this.clearValueOnUnregister = false,
     this.canPop,
   });
 
-  static FormBuilderState? of(BuildContext context) => context.findAncestorStateOfType<FormBuilderState>();
+  static FormBuilderState<T>? of<T extends Object>(BuildContext context) => context.findAncestorStateOfType<FormBuilderState<T>>();
 
   @override
-  FormBuilderState createState() => FormBuilderState();
+  FormBuilderState<T> createState() => FormBuilderState<T>();
 }
 
 /// A type alias for a map of form fields.
 typedef FormBuilderFields = Map<String, FormBuilderFieldState<FormBuilderField<dynamic>, dynamic>>;
 
-class FormBuilderState extends State<FormBuilder> {
+class FormBuilderState<T extends Object> extends State<FormBuilder<T>> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FormBuilderFields _fields = {};
   final Object _instantValue = {};

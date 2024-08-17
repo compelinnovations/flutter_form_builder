@@ -28,7 +28,7 @@ class _DynamicFieldsState extends State<DynamicFields> {
   @override
   Widget build(BuildContext context) {
     return FormBuilder(
-      key: _formKey,
+      key: _formKey, initialValue: const {},
       // IMPORTANT to remove all references from dynamic field when delete
       clearValueOnUnregister: true,
       child: Column(
@@ -51,8 +51,7 @@ class _DynamicFieldsState extends State<DynamicFields> {
                   onPressed: () {
                     _formKey.currentState!.saveAndValidate();
                     setState(() {
-                      savedValue =
-                          _formKey.currentState?.value.toString() ?? '';
+                      savedValue = _formKey.currentState?.value.toString() ?? '';
                     });
                   },
                 ),

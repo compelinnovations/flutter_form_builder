@@ -17,6 +17,7 @@ class _ConditionalFieldsState extends State<ConditionalFields> {
   Widget build(BuildContext context) {
     return FormBuilder(
       key: _formKey,
+      initialValue: const {},
       child: Column(
         children: <Widget>[
           const SizedBox(height: 20),
