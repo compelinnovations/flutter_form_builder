@@ -172,6 +172,9 @@ class FormBuilderDropdown<T> extends FormBuilderFieldDecoration<T> {
   /// The color for the button's [Material] when it has the input focus.
   final Color? focusColor;
 
+  /// The color for the dropdown inkwell's [Material] when it has been pressed.
+  final Color? splashColor;
+
   /// {@macro flutter.widgets.Focus.autofocus}
   final bool autofocus;
 
@@ -278,6 +281,7 @@ class FormBuilderDropdown<T> extends FormBuilderFieldDecoration<T> {
     this.autofocus = false,
     this.dropdownColor,
     this.focusColor,
+    this.splashColor,
     this.itemHeight,
     this.selectedItemBuilder,
     this.menuMaxHeight,
@@ -293,61 +297,72 @@ class FormBuilderDropdown<T> extends FormBuilderFieldDecoration<T> {
            final state = field as _FormBuilderDropdownState<T>;
 
            final hasValue = items.map((e) => e.value).contains(field.value);
-           return InputDecorator(
+
+           final dropdown = DropdownButtonFormField<T>(
              decoration: state.decoration,
-             child: DropdownButton<T>(
-               menuWidth: menuWidth,
-               padding: padding,
-               underline: underline,
-               isExpanded: isExpanded,
-               items: items,
-               value: hasValue ? field.value : null,
-               style: style,
-               isDense: isDense,
-               disabledHint:
-                   hasValue
-                       ? items
-                           .firstWhere(
-                             (dropDownItem) =>
-                                 dropDownItem.value == field.value,
-                           )
-                           .child
-                       : disabledHint,
-               elevation: elevation,
-               iconSize: iconSize,
-               icon: icon,
-               iconDisabledColor: iconDisabledColor,
-               iconEnabledColor: iconEnabledColor,
-               onChanged:
-                   state.enabled
-                       ? (T? value) {
-                         field.didChange(value);
-                       }
-                       : null,
-               onTap: onTap,
-               focusNode: state.effectiveFocusNode,
-               autofocus: autofocus,
-               dropdownColor: dropdownColor,
-               focusColor: focusColor,
-               itemHeight: itemHeight,
-               selectedItemBuilder: selectedItemBuilder,
-               menuMaxHeight: menuMaxHeight,
-               borderRadius: borderRadius,
-               enableFeedback: enableFeedback,
-               alignment: alignment,
-               hint: hint,
-             ),
+             padding: padding,
+             isExpanded: isExpanded,
+             items: items,
+             value: hasValue ? field.value : null,
+             style: style,
+             isDense: isDense,
+             disabledHint: hasValue ? items.firstWhere((dropDownItem) => dropDownItem.value == field.value).child : disabledHint,
+             elevation: elevation,
+             iconSize: iconSize,
+             icon: icon,
+             iconDisabledColor: iconDisabledColor,
+             iconEnabledColor: iconEnabledColor,
+             onChanged:
+                 state.enabled
+                     ? (T? value) {
+                       field.didChange(value);
+                     }
+                     : null,
+             onTap: onTap,
+             focusNode: state.effectiveFocusNode,
+             autofocus: autofocus,
+             dropdownColor: dropdownColor,
+             focusColor: focusColor,
+             itemHeight: itemHeight,
+             selectedItemBuilder: selectedItemBuilder,
+             menuMaxHeight: menuMaxHeight,
+             borderRadius: borderRadius ?? BorderRadius.circular(12.0),
+             enableFeedback: enableFeedback,
+             alignment: alignment,
+             hint: hint,
+           );
+
+           // Wrap it in an InkWell that shows the splash.
+           return InkWell(
+             borderRadius: borderRadius ?? BorderRadius.circular(12.0),
+             // Use translucent behavior so the tap also reaches the dropdown.
+             // (HitTestBehavior.translucent ensures that even though InkWell gets the event,
+             // the underlying widget also sees it.)
+             // Note: Depending on your use-case, you might need to tweak this behavior.
+             // behavior: HitTestBehavior.translucent,
+             // splashColor: Colors.blueAccent.withOpacity(0.3),
+             splashColor: splashColor ?? Colors.transparent,
+             onTap: () {
+               // Trigger the splash effect.
+               // Then, forward the tap to the dropdown's onTap (if any).
+               if (onTap != null) {
+                 onTap!();
+               }
+               // Also, if the dropdown is enabled and its internal tap handler
+               // should open the menu, we let the event propagate.
+               // (Because the InkWell is wrapping the dropdown, its tap will also
+               // reach the DropdownButtonFormField.)
+             },
+             child: dropdown,
            );
          },
        );
 
   @override
-  FormBuilderFieldDecorationState<FormBuilderDropdown<T>, T> createState() =>
-      _FormBuilderDropdownState<T>();
+  FormBuilderFieldDecorationState<FormBuilderDropdown<T>, T> createState() => _FormBuilderDropdownState<T>();
 }
 
-class _FormBuilderDropdownState<T>
-    extends FormBuilderFieldDecorationState<FormBuilderDropdown<T>, T> {
+class _FormBuilderDropdownState<T> extends FormBuilderFieldDecorationState<FormBuilderDropdown<T>, T> {
   @override
   void didUpdateWidget(covariant FormBuilderDropdown<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -355,11 +370,9 @@ class _FormBuilderDropdownState<T>
     final oldValues = oldWidget.items.map((e) => e.value).toList();
     final currentlyValues = widget.items.map((e) => e.value).toList();
     final oldChilds = oldWidget.items.map((e) => e.child.toString()).toList();
-    final currentlyChilds =
-        widget.items.map((e) => e.child.toString()).toList();
+    final currentlyChilds = widget.items.map((e) => e.child.toString()).toList();
 
-    if (!currentlyValues.contains(initialValue) &&
-        !initialValue.emptyValidator()) {
+    if (!currentlyValues.contains(initialValue) && !initialValue.emptyValidator()) {
       assert(
         currentlyValues.contains(initialValue) && initialValue.emptyValidator(),
         'The initialValue [$initialValue] is not in the list of items or is not null or empty. '
@@ -369,10 +382,8 @@ class _FormBuilderDropdownState<T>
       setValue(null);
     }
 
-    if ((!listEquals(oldChilds, currentlyChilds) ||
-            !listEquals(oldValues, currentlyValues)) &&
-        (currentlyValues.contains(initialValue) ||
-            initialValue.emptyValidator())) {
+    if ((!listEquals(oldChilds, currentlyChilds) || !listEquals(oldValues, currentlyValues)) &&
+        (currentlyValues.contains(initialValue) || initialValue.emptyValidator())) {
       setValue(initialValue);
     }
   }
